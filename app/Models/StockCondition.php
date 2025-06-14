@@ -10,7 +10,16 @@ class StockCondition extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'temperature', 'humidity', 'air_condition', 'action_taken'
+        'bean_type',
+        'quantity',
+        'temperature',
+        'humidity',
+        'status',
+        'location',
+        'air_condition',
+        'action_taken',
+        'user_id',
+        'last_updated'
     ];
 
     public function user()
