@@ -21,10 +21,12 @@ jobs:
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: locked
 
       - name: Run Pint
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test --ansi
 
       - name: PHP syntax check
         run: |
