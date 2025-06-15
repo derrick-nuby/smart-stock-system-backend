@@ -97,3 +97,14 @@ The `StockConditionResource` describes a stock record along with the owning user
   "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
+
+## Docker Setup
+
+To build and run the containers, execute:
+
+```bash
+docker-compose up --build
+```
+
+The `app` service uses PHP 8.3 with Composer and connects to the `mysql` and `redis` containers defined in `docker-compose.yml`.
+
