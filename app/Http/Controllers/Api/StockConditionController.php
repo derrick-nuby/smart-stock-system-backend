@@ -37,7 +37,7 @@ class StockConditionController extends Controller
             $stocks = StockCondition::where('user_id', $user->id)
                 ->with('user')
                 ->orderBy('created_at', 'desc')
-                ->paginate(10);
+                ->paginate(config('app.pagination.per_page'));
 
             return StockConditionResource::collection($stocks);
         }
@@ -198,21 +198,12 @@ class StockConditionController extends Controller
             $query->with('user');
             $query->orderBy('created_at', 'desc');
 
-            $stockConditions = $query->get();
-
-            if ($stockConditions->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'No stock conditions found',
-                    'data' => [],
-                    'count' => 0
-                ]);
-            }
+            $stockConditions = $query->paginate(config('app.pagination.per_page'));
 
             return StockConditionResource::collection($stockConditions)
                 ->additional([
                     'success' => true,
-                    'count' => $stockConditions->count(),
+                    'count' => $stockConditions->total(),
                     'message' => 'Stock conditions retrieved successfully'
                 ]);
 
@@ -240,7 +231,7 @@ class StockConditionController extends Controller
             ->where('user_id', (int)$user_id)
             ->with('user')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(config('app.pagination.per_page'));
 
         return StockConditionResource::collection($stockConditions)
             ->additional([
@@ -258,7 +249,8 @@ class StockConditionController extends Controller
             $query->where('user_id', $user->id);
         }
         
-        $stocks = $query->orderBy('created_at', 'desc')->get();
+        $stocks = $query->orderBy('created_at', 'desc')
+            ->paginate(config('app.pagination.per_page'));
 
         return StockConditionResource::collection($stocks)
             ->additional(['success' => true]);
