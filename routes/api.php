@@ -16,9 +16,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('stocks')->group(function () {
         Route::get('/', [StockConditionController::class, 'getStocks']);
         Route::post('/', [StockConditionController::class, 'createStock']);
-        Route::get('/{id}', [StockConditionController::class, 'getStock']);
-        Route::put('/{id}', [StockConditionController::class, 'updateStock']);
-        Route::delete('/{id}', [StockConditionController::class, 'deleteStock']);
+        Route::get('/{stock}', [StockConditionController::class, 'getStock']);
+        Route::put('/{stock}', [StockConditionController::class, 'updateStock']);
+        Route::delete('/{stock}', [StockConditionController::class, 'deleteStock']);
         Route::get('stock-conditions/all', [StockConditionController::class, 'getAllStockConditions']);
 
     });

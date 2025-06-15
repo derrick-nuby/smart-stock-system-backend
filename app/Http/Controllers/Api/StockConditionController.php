@@ -289,12 +289,12 @@ class StockConditionController extends Controller
         }
     }
 
-    public function getStock(int $id): JsonResponse
+    public function getStock(StockCondition $stock): JsonResponse
     {
         $user = Auth::user();
-        $stock = StockCondition::with('user')->find($id);
+        $stock->load('user');
 
-        if (!$stock || (!$this->isAdmin($user) && $stock->user_id !== $user->id)) {
+        if (!$this->isAdmin($user) && $stock->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Stock not found'
@@ -305,12 +305,10 @@ class StockConditionController extends Controller
             ->additional(['success' => true]);
     }
 
-    public function updateStock(UpdateStockRequest $request, int $id): JsonResponse
+    public function updateStock(UpdateStockRequest $request, StockCondition $stock): JsonResponse
     {
         $user = Auth::user();
-        $stock = StockCondition::find($id);
-
-        if (!$stock || (!$this->isAdmin($user) && $stock->user_id !== $user->id)) {
+        if (!$this->isAdmin($user) && $stock->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Stock not found',
@@ -328,12 +326,10 @@ class StockConditionController extends Controller
             ]);
     }
 
-    public function deleteStock(int $id): JsonResponse
+    public function deleteStock(StockCondition $stock): JsonResponse
     {
         $user = Auth::user();
-        $stock = StockCondition::find($id);
-
-        if (!$stock || (!$this->isAdmin($user) && $stock->user_id !== $user->id)) {
+        if (!$this->isAdmin($user) && $stock->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Stock not found'
