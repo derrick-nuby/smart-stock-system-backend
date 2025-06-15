@@ -18,7 +18,6 @@ class AuthController extends Controller{
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role_id' => 2  // Default Farmer role_id
         ]);
 
         // Make sure role exists and assign it
@@ -32,7 +31,6 @@ class AuthController extends Controller{
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role_id' => 2,
                 'role' => 'Farmer'
             ]
         ], 201);
@@ -58,7 +56,6 @@ class AuthController extends Controller{
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role_id' => $user->role_id,
                 'roles' => $user->getRoleNames()
             ]
         ];
@@ -66,7 +63,6 @@ class AuthController extends Controller{
         // Add debug logging
         Log::info('User login successful:', [
             'user_id' => $user->id,
-            'role_id' => $user->role_id,
             'roles' => $user->getRoleNames()->toArray()
         ]);
 
