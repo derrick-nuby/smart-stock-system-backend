@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Http\Requests\CreateUserRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
@@ -28,17 +28,10 @@ class UserController extends Controller
         return UserResource::collection($users);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CreateUserRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users',
-                'password' => 'required|min:6',
-                'role' => 'required|in:' . Role::ADMIN . ',' . Role::FARMER,
-            ]);
-
-            $user = $this->authService->createUser($validated);
+            $user = $this->authService->createUser($request->validated());
 
             return (new UserResource($user->load('roles')))
                 ->additional([

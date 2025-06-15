@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\CreateFarmerRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Services\AuthService;
@@ -48,7 +49,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out']);
     }
 
-    public function createFarmer(Request $request): JsonResponse
+    public function createFarmer(CreateFarmerRequest $request): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -67,13 +68,7 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users',
-                'password' => 'required|min:6',
-            ]);
-
-            $newUser = $this->authService->createFarmer($validated);
+            $newUser = $this->authService->createFarmer($request->validated());
 
             return response()->json([
                 'success' => true,
