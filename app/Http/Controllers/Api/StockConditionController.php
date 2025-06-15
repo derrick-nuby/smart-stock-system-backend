@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\CreateStockRequest;
+use App\Http\Requests\UpdateStockRequest;
 use App\Models\StockCondition;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -245,19 +247,10 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function createStock(Request $request)
+    public function createStock(CreateStockRequest $request)
     {
         try {
-            $data = $request->validate([
-                'bean_type' => 'required|string|max:255',
-                'quantity' => 'required|numeric|min:0',
-                'temperature' => 'required|numeric',
-                'humidity' => 'required|numeric|min:0|max:100',
-                'status' => 'required|string|in:Good,Warning,Critical',
-                'location' => 'required|string|max:255',
-                'air_condition' => 'required|string|max:255',
-                'action_taken' => 'nullable|string'
-            ]);
+            $data = $request->validated();
 
             $stock = new StockCondition();
             $stock->fill($data);
@@ -299,7 +292,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function updateStock(Request $request, $id)
+    public function updateStock(UpdateStockRequest $request, $id)
     {
         $user = Auth::user();
         $stock = StockCondition::find($id);
@@ -311,16 +304,7 @@ class StockConditionController extends Controller
             ], 404);
         }
 
-        $data = $request->validate([
-            'bean_type' => 'sometimes|required|string',
-            'quantity' => 'sometimes|required|numeric',
-            'temperature' => 'sometimes|required|numeric',
-            'humidity' => 'sometimes|required|numeric',
-            'status' => 'sometimes|required|string',
-            'location' => 'sometimes|required|string',
-            'air_condition' => 'sometimes|required|string',
-            'action_taken' => 'nullable|string'
-        ]);
+        $data = $request->validated();
 
         $data['last_updated'] = now();
         $stock->update($data);
