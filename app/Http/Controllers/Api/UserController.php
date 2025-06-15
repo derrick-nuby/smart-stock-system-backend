@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Services\AuthService;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
+    public function __construct(private AuthService $authService)
+    {
+    }
+
     public function index()
     {
         return \App\Models\User::with('roles')->get();
@@ -19,20 +22,14 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:6',
-                'role' => 'required|in:Admin,Farmer'
+                'role' => 'required|in:Admin,Farmer',
             ]);
 
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-            ]);
-
-            $user->assignRole($request->role);
+            $user = $this->authService->createUser($validated);
 
             return response()->json([
                 'success' => true,
@@ -41,7 +38,7 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'role' => $request->role
+                    'role' => $validated['role']
                 ]
             ], 201);
 

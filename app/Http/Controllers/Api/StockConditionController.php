@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\CreateStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 use App\Models\StockCondition;
+use App\Services\StockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
@@ -15,6 +16,10 @@ class StockConditionController extends Controller
 {
     private const FARMER_ROLE = 'farmer';
     private const ADMIN_ROLE = 'Admin';
+
+    public function __construct(private StockService $stockService)
+    {
+    }
 
     public function index()
     {
@@ -252,16 +257,12 @@ class StockConditionController extends Controller
         try {
             $data = $request->validated();
 
-            $stock = new StockCondition();
-            $stock->fill($data);
-            $stock->user_id = Auth::id();
-            $stock->last_updated = now();
-            $stock->save();
+            $stock = $this->stockService->createStock($data);
 
             return response()->json([
                 'success' => true,
-                'data' => $stock->fresh(),
-                'message' => 'Stock created successfully'
+                'data' => $stock,
+                'message' => 'Stock created successfully',
             ], 201);
 
         } catch (\Exception $e) {
@@ -269,7 +270,7 @@ class StockConditionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create stock',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -300,19 +301,18 @@ class StockConditionController extends Controller
         if (!$stock || (!$this->isAdmin($user) && $stock->user_id !== $user->id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Stock not found'
+                'message' => 'Stock not found',
             ], 404);
         }
 
         $data = $request->validated();
 
-        $data['last_updated'] = now();
-        $stock->update($data);
+        $stock = $this->stockService->updateStock($stock, $data);
 
         return response()->json([
             'success' => true,
             'data' => $stock,
-            'message' => 'Stock updated successfully'
+            'message' => 'Stock updated successfully',
         ]);
     }
 
