@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -6,6 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\StockCondition;
 
 class User extends Authenticatable
 {
@@ -26,8 +29,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function stockConditions()
+    public function stockConditions(): HasMany
     {
-        return $this->hasMany(\App\Models\StockCondition::class);
+        return $this->hasMany(StockCondition::class);
     }
 }

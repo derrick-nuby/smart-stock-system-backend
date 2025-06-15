@@ -1,8 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\CreateStockRequest;
 use App\Http\Requests\UpdateStockRequest;
@@ -22,7 +25,7 @@ class StockConditionController extends Controller
     {
     }
 
-    public function index()
+    public function index(): JsonResponse|LengthAwarePaginator
     {
         /** @var User $user */
         $user = Auth::user();
@@ -44,7 +47,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function show(StockCondition $stockCondition)
+    public function show(StockCondition $stockCondition): StockCondition|JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
@@ -57,7 +60,7 @@ class StockConditionController extends Controller
         return response()->json(['message' => 'Forbidden'], 403);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         try {
             /** @var User $user */
@@ -135,7 +138,7 @@ class StockConditionController extends Controller
         }
     }
 
-    public function update(Request $request, StockCondition $stockCondition)
+    public function update(Request $request, StockCondition $stockCondition): StockCondition|JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
@@ -161,7 +164,7 @@ class StockConditionController extends Controller
         return $stockCondition;
     }
 
-    public function destroy(StockCondition $stockCondition)
+    public function destroy(StockCondition $stockCondition): JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
@@ -175,7 +178,7 @@ class StockConditionController extends Controller
         return response()->json(['message' => 'Stock condition deleted successfully']);
     }
 
-    public function getAllStockConditions(Request $request)
+    public function getAllStockConditions(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -223,7 +226,7 @@ class StockConditionController extends Controller
         }
     }
 
-    public function getStockConditionsByUserId($user_id)
+    public function getStockConditionsByUserId(int $user_id): JsonResponse
     {
         $stockConditions = StockCondition::query()
             ->where('user_id', (int)$user_id)
@@ -238,7 +241,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function getStocks()
+    public function getStocks(): JsonResponse
     {
         $user = Auth::user();
         $query = StockCondition::with('user');
@@ -253,7 +256,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function createStock(CreateStockRequest $request)
+    public function createStock(CreateStockRequest $request): JsonResponse
     {
         try {
             $data = $request->validated();
@@ -276,7 +279,7 @@ class StockConditionController extends Controller
         }
     }
 
-    public function getStock($id)
+    public function getStock(int $id): JsonResponse
     {
         $user = Auth::user();
         $stock = StockCondition::with('user')->find($id);
@@ -294,7 +297,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function updateStock(UpdateStockRequest $request, $id)
+    public function updateStock(UpdateStockRequest $request, int $id): JsonResponse
     {
         $user = Auth::user();
         $stock = StockCondition::find($id);
@@ -317,7 +320,7 @@ class StockConditionController extends Controller
         ]);
     }
 
-    public function deleteStock($id)
+    public function deleteStock(int $id): JsonResponse
     {
         $user = Auth::user();
         $stock = StockCondition::find($id);

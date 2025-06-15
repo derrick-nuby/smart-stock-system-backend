@@ -1,12 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Spatie\Permission\Models\Role as PermissionRole;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Collection;
 use App\Enums\Role;
 
 class UserController extends Controller
@@ -15,12 +18,12 @@ class UserController extends Controller
     {
     }
 
-    public function index()
+    public function index(): Collection
     {
         return \App\Models\User::with('roles')->get();
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -52,7 +55,7 @@ class UserController extends Controller
         }
     }
 
-    public function getRoles()
+    public function getRoles(): JsonResponse
     {
         return response()->json([
             'success' => true,

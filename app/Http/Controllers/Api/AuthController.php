@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -10,13 +11,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Role;
 
+use Illuminate\Http\JsonResponse;
+
 class AuthController extends Controller
 {
     public function __construct(private AuthService $authService)
     {
     }
 
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
         $user = $this->authService->register($request->validated());
 
@@ -32,20 +35,20 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $response = $this->authService->login($request->validated());
 
         return response()->json($response);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out']);
     }
 
-    public function createFarmer(Request $request)
+    public function createFarmer(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
