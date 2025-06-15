@@ -1,29 +1,24 @@
 <?php
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller{
-    public function register(RegisterRequest $request){
-        $data = $request->validated();
-        
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+class AuthController extends Controller
+{
+    public function __construct(private AuthService $authService)
+    {
+    }
 
-        // Make sure role exists and assign it
-        $farmerRole = \Spatie\Permission\Models\Role::findById(2);
-        $user->assignRole($farmerRole);
-        
+    public function register(RegisterRequest $request)
+    {
+        $user = $this->authService->register($request->validated());
+
         return response()->json([
             'success' => true,
             'message' => 'Registration successful',
@@ -31,40 +26,14 @@ class AuthController extends Controller{
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => 'Farmer'
-            ]
+                'role' => 'Farmer',
+            ],
         ], 201);
     }
+
     public function login(LoginRequest $request)
     {
-        $data = $request->validated();
-
-        $user = User::where('email', $data['email'])->first();
-
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        $response = [
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'roles' => $user->getRoleNames()
-            ]
-        ];
-
-        // Add debug logging
-        Log::info('User login successful:', [
-            'user_id' => $user->id,
-            'roles' => $user->getRoleNames()->toArray()
-        ]);
+        $response = $this->authService->login($request->validated());
 
         return response()->json($response);
     }
@@ -94,19 +63,13 @@ class AuthController extends Controller{
                 ], 403);
             }
 
-            $request->validate([
+            $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:6',
             ]);
 
-            $newUser = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-            ]);
-
-            $newUser->assignRole('Farmer');
+            $newUser = $this->authService->createFarmer($validated);
 
             return response()->json([
                 'success' => true,
