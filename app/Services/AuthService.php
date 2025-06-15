@@ -19,7 +19,7 @@ class AuthService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
-        $farmerRole = PermissionRole::findById(2);
+        $farmerRole = PermissionRole::findByName(Role::FARMER);
         $user->assignRole($farmerRole);
         return $user;
     }
