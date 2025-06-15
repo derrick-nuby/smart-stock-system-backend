@@ -22,7 +22,8 @@ class UserController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $users = \App\Models\User::with('roles')->get();
+        $users = \App\Models\User::with('roles')
+            ->paginate(config('app.pagination.per_page'));
 
         return UserResource::collection($users);
     }
