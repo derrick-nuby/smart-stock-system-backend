@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Enums\Role;
 
 class AuthController extends Controller
 {
@@ -26,7 +27,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => 'Farmer',
+                'role' => Role::FARMER,
             ],
         ], 201);
     }
@@ -55,7 +56,7 @@ class AuthController extends Controller
                 'roles' => $user->getRoleNames()
             ]);
 
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole(Role::ADMIN)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized. Only admins can create farmers.',

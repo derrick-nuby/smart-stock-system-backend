@@ -11,11 +11,12 @@ use App\Services\StockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Enums\Role;
 
 class StockConditionController extends Controller
 {
-    private const FARMER_ROLE = 'farmer';
-    private const ADMIN_ROLE = 'Admin';
+    private const FARMER_ROLE = Role::FARMER;
+    private const ADMIN_ROLE = Role::ADMIN;
 
     public function __construct(private StockService $stockService)
     {
