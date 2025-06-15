@@ -59,3 +59,41 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## API Resource Formats
+
+### UserResource
+The `UserResource` presents basic user information. Example response:
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "roles": ["Admin"]
+}
+```
+
+### StockConditionResource
+The `StockConditionResource` describes a stock record along with the owning user.
+```json
+{
+  "id": 10,
+  "bean_type": "Arabica",
+  "quantity": 20,
+  "temperature": 22,
+  "humidity": 55,
+  "status": "Good",
+  "location": "Warehouse A",
+  "air_condition": "Cool",
+  "action_taken": null,
+  "last_updated": "2024-01-01T12:00:00Z",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "roles": ["Farmer"]
+  },
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T12:00:00Z"
+}
+```
