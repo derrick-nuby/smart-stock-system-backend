@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Http\Resources\StockConditionResource;
 use App\Http\Requests\CreateStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 use App\Models\StockCondition;
@@ -25,17 +27,19 @@ class StockConditionController extends Controller
     {
     }
 
-    public function index(): JsonResponse|LengthAwarePaginator
+    public function index(): JsonResponse|AnonymousResourceCollection
     {
         /** @var User $user */
         $user = Auth::user();
 
         if ($this->isFarmer($user)) {
             // Return paginated data for farmers
-            return StockCondition::where('user_id', $user->id)
+            $stocks = StockCondition::where('user_id', $user->id)
                 ->with('user')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
+
+            return StockConditionResource::collection($stocks);
         }
 
         // Admin gets summary
@@ -43,18 +47,20 @@ class StockConditionController extends Controller
             'total_users' => StockCondition::distinct('user_id')->count('user_id'),
             'avg_temperature' => round(StockCondition::avg('temperature'), 2),
             'avg_humidity' => round(StockCondition::avg('humidity'), 2),
-            'latest_condition' => StockCondition::latest()->with('user')->first(),
+            'latest_condition' => new StockConditionResource(
+                StockCondition::latest()->with('user')->first()
+            ),
         ]);
     }
 
-    public function show(StockCondition $stockCondition): StockCondition|JsonResponse
+    public function show(StockCondition $stockCondition): StockConditionResource|JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
 
         // Allow farmers to view their own records
         if ($stockCondition->user_id === $user->id || $this->isAdmin($user)) {
-            return $stockCondition;
+            return new StockConditionResource($stockCondition->load('user'));
         }
 
         return response()->json(['message' => 'Forbidden'], 403);
@@ -105,12 +111,14 @@ class StockConditionController extends Controller
             ];
 
             $stock = StockCondition::create($stockData);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $stock,
-                'message' => 'Stock condition created successfully'
-            ], 201);
+
+            return (new StockConditionResource($stock->load('user')))
+                ->additional([
+                    'success' => true,
+                    'message' => 'Stock condition created successfully'
+                ])
+                ->response()
+                ->setStatusCode(201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -138,7 +146,7 @@ class StockConditionController extends Controller
         }
     }
 
-    public function update(Request $request, StockCondition $stockCondition): StockCondition|JsonResponse
+    public function update(Request $request, StockCondition $stockCondition): StockConditionResource|JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
@@ -161,7 +169,7 @@ class StockConditionController extends Controller
         ]);
 
         $stockCondition->update($data);
-        return $stockCondition;
+        return new StockConditionResource($stockCondition->load('user'));
     }
 
     public function destroy(StockCondition $stockCondition): JsonResponse
@@ -178,7 +186,7 @@ class StockConditionController extends Controller
         return response()->json(['message' => 'Stock condition deleted successfully']);
     }
 
-    public function getAllStockConditions(Request $request): JsonResponse
+    public function getAllStockConditions(Request $request): AnonymousResourceCollection|JsonResponse
     {
         try {
             $user = Auth::user();
@@ -201,12 +209,12 @@ class StockConditionController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $stockConditions,
-                'count' => $stockConditions->count(),
-                'message' => 'Stock conditions retrieved successfully'
-            ]);
+            return StockConditionResource::collection($stockConditions)
+                ->additional([
+                    'success' => true,
+                    'count' => $stockConditions->count(),
+                    'message' => 'Stock conditions retrieved successfully'
+                ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch stock conditions:', [
@@ -226,7 +234,7 @@ class StockConditionController extends Controller
         }
     }
 
-    public function getStockConditionsByUserId(int $user_id): JsonResponse
+    public function getStockConditionsByUserId(int $user_id): AnonymousResourceCollection
     {
         $stockConditions = StockCondition::query()
             ->where('user_id', (int)$user_id)
@@ -234,14 +242,14 @@ class StockConditionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $stockConditions,
-            'message' => 'Stock conditions retrieved successfully'
-        ]);
+        return StockConditionResource::collection($stockConditions)
+            ->additional([
+                'success' => true,
+                'message' => 'Stock conditions retrieved successfully'
+            ]);
     }
 
-    public function getStocks(): JsonResponse
+    public function getStocks(): AnonymousResourceCollection
     {
         $user = Auth::user();
         $query = StockCondition::with('user');
@@ -250,10 +258,10 @@ class StockConditionController extends Controller
             $query->where('user_id', $user->id);
         }
         
-        return response()->json([
-            'success' => true,
-            'data' => $query->orderBy('created_at', 'desc')->get()
-        ]);
+        $stocks = $query->orderBy('created_at', 'desc')->get();
+
+        return StockConditionResource::collection($stocks)
+            ->additional(['success' => true]);
     }
 
     public function createStock(CreateStockRequest $request): JsonResponse
@@ -263,11 +271,13 @@ class StockConditionController extends Controller
 
             $stock = $this->stockService->createStock($data);
 
-            return response()->json([
-                'success' => true,
-                'data' => $stock,
-                'message' => 'Stock created successfully',
-            ], 201);
+            return (new StockConditionResource($stock->load('user')))
+                ->additional([
+                    'success' => true,
+                    'message' => 'Stock created successfully',
+                ])
+                ->response()
+                ->setStatusCode(201);
 
         } catch (\Exception $e) {
             Log::error('Stock creation error:', ['error' => $e->getMessage(), 'data' => $request->all()]);
@@ -291,10 +301,8 @@ class StockConditionController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $stock
-        ]);
+        return (new StockConditionResource($stock))
+            ->additional(['success' => true]);
     }
 
     public function updateStock(UpdateStockRequest $request, int $id): JsonResponse
@@ -313,11 +321,11 @@ class StockConditionController extends Controller
 
         $stock = $this->stockService->updateStock($stock, $data);
 
-        return response()->json([
-            'success' => true,
-            'data' => $stock,
-            'message' => 'Stock updated successfully',
-        ]);
+        return (new StockConditionResource($stock->load('user')))
+            ->additional([
+                'success' => true,
+                'message' => 'Stock updated successfully',
+            ]);
     }
 
     public function deleteStock(int $id): JsonResponse

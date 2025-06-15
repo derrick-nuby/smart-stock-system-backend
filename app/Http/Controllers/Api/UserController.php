@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Spatie\Permission\Models\Role as PermissionRole;
 use Illuminate\Support\Facades\Log;
@@ -18,9 +20,11 @@ class UserController extends Controller
     {
     }
 
-    public function index(): Collection
+    public function index(): AnonymousResourceCollection
     {
-        return \App\Models\User::with('roles')->get();
+        $users = \App\Models\User::with('roles')->get();
+
+        return UserResource::collection($users);
     }
 
     public function store(Request $request): JsonResponse
@@ -35,16 +39,13 @@ class UserController extends Controller
 
             $user = $this->authService->createUser($validated);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $validated['role']
-                ]
-            ], 201);
+            return (new UserResource($user->load('roles')))
+                ->additional([
+                    'success' => true,
+                    'message' => 'User created successfully'
+                ])
+                ->response()
+                ->setStatusCode(201);
 
         } catch (\Exception $e) {
             Log::error('Error creating user: ' . $e->getMessage());
