@@ -13,14 +13,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_conditions', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained();
-    $table->float('temperature');
-    $table->float('humidity');
-    $table->string('air_condition');
-    $table->text('action_taken')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            $table->foreignId('user_id')->constrained();
+            $table->string('bean_type');
+            $table->integer('quantity');
+            $table->float('temperature');
+            $table->float('humidity');
+            $table->string('status');
+            $table->string('location');
+            $table->string('air_condition');
+            $table->text('action_taken')->nullable();
+            $table->timestamp('last_updated')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
