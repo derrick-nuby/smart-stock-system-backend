@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -66,125 +65,6 @@ class StockConditionController extends Controller
         return response()->json(['message' => 'Forbidden'], 403);
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        try {
-            /** @var User $user */
-            $user = Auth::user();
-
-            $data = $request->validate([
-                'bean_type' => 'required|string|max:255',
-                'quantity' => 'required|numeric|min:0',
-                'temperature' => 'required|numeric',
-                'humidity' => 'required|numeric',
-                'status' => 'required|string|in:Good,Warning,Critical',
-                'location' => 'required|string|max:255',
-                'air_condition' => 'required|string|max:255',
-                'action_taken' => 'nullable|string|max:1000'
-            ], [
-                'bean_type.required' => 'The bean type field is required',
-                'quantity.required' => 'The quantity field is required',
-                'quantity.numeric' => 'The quantity must be a number',
-                'quantity.min' => 'The quantity must be at least 0',
-                'temperature.required' => 'The temperature field is required',
-                'temperature.numeric' => 'The temperature must be a number',
-                'humidity.required' => 'The humidity field is required',
-                'humidity.numeric' => 'The humidity must be a number',
-                'status.required' => 'The status field is required',
-                'status.in' => 'The status must be Good, Warning, or Critical',
-                'location.required' => 'The location field is required',
-                'air_condition.required' => 'The air condition field is required'
-            ]);
-
-            // Format the data before creation
-            $stockData = [
-                'bean_type' => $data['bean_type'],
-                'quantity' => $data['quantity'],
-                'temperature' => $data['temperature'],
-                'humidity' => $data['humidity'],
-                'status' => $data['status'],
-                'location' => $data['location'],
-                'air_condition' => $data['air_condition'],
-                'action_taken' => $data['action_taken'] ?? null,
-                'user_id' => $user->id,
-                'last_updated' => now()
-            ];
-
-            $stock = StockCondition::create($stockData);
-
-            return (new StockConditionResource($stock->load('user')))
-                ->additional([
-                    'success' => true,
-                    'message' => 'Stock condition created successfully'
-                ])
-                ->response()
-                ->setStatusCode(201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-                'fields_required' => [
-                    'bean_type' => 'String, required',
-                    'quantity' => 'Number, minimum 0',
-                    'temperature' => 'Number',
-                    'humidity' => 'Number',
-                    'status' => 'String (Good/Warning/Critical)',
-                    'location' => 'String',
-                    'air_condition' => 'String',
-                    'action_taken' => 'String, optional'
-                ]
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create stock condition',
-                'error' => $e->getMessage(),
-                'error_code' => $e->getCode()
-            ], 500);
-        }
-    }
-
-    public function update(Request $request, StockCondition $stockCondition): StockConditionResource|JsonResponse
-    {
-        /** @var User $user */
-        $user = Auth::user();
-
-        // Allow farmers to update their own records
-        if ($stockCondition->user_id !== $user->id && !$this->isAdmin($user)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $data = $request->validate([
-            'temperature' => 'sometimes|required|numeric',
-            'humidity' => 'sometimes|required|numeric',
-            'air_condition' => 'sometimes|required|string|max:255',
-            'action_taken' => 'nullable|string',
-            'bean_type' => 'sometimes|required|string',
-            'quantity' => 'sometimes|required|numeric',
-            'status' => 'sometimes|required|string',
-            'location' => 'sometimes|required|string',
-            'last_updated' => 'sometimes|required|date'
-        ]);
-
-        $stockCondition->update($data);
-        return new StockConditionResource($stockCondition->load('user'));
-    }
-
-    public function destroy(StockCondition $stockCondition): JsonResponse
-    {
-        /** @var User $user */
-        $user = Auth::user();
-
-        // Allow farmers to delete their own records
-        if ($stockCondition->user_id !== $user->id && !$this->isAdmin($user)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $stockCondition->delete();
-        return response()->json(['message' => 'Stock condition deleted successfully']);
-    }
 
     public function getAllStockConditions(Request $request): AnonymousResourceCollection|JsonResponse
     {
