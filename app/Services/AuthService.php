@@ -6,7 +6,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Role as PermissionRole;
+use App\Enums\Role;
 
 class AuthService
 {
@@ -17,7 +18,7 @@ class AuthService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
-        $farmerRole = Role::findById(2);
+        $farmerRole = PermissionRole::findById(2);
         $user->assignRole($farmerRole);
         return $user;
     }
@@ -54,7 +55,7 @@ class AuthService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
-        $user->assignRole('Farmer');
+        $user->assignRole(Role::FARMER);
         return $user;
     }
 

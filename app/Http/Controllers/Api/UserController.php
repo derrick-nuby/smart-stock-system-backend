@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
-use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Role as PermissionRole;
 use Illuminate\Support\Facades\Log;
+use App\Enums\Role;
 
 class UserController extends Controller
 {
@@ -26,7 +27,7 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:6',
-                'role' => 'required|in:Admin,Farmer',
+                'role' => 'required|in:' . Role::ADMIN . ',' . Role::FARMER,
             ]);
 
             $user = $this->authService->createUser($validated);
@@ -55,7 +56,7 @@ class UserController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => Role::all()
+            'data' => PermissionRole::all()
         ]);
     }
 }
